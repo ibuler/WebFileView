@@ -1,0 +1,203 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<HTML>
+ <HEAD>
+  <title>日志查看系统</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" href="/static/css/zTreeStyle/zTreeStyle.css" type="text/css">
+  <link href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+	body {
+	background-color: white;
+	margin:0; padding:0;
+	text-align: center;
+	}
+	div, p, table, th, td {
+		list-style:none;
+		margin:0; padding:0;
+		color:#333; font-size:12px;
+		font-family:dotum, Verdana, Arial, Helvetica, AppleGothic, sans-serif;
+	}
+	#testIframe {margin-left: 10px;}
+  </style>
+    <script type="text/javascript" src="/static/js/jquery-1.4.4.min.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.ztree.core-3.5.js"></script>
+    <script type="text/javascript" src="/static/js/jquery.ztree.excheck-3.5.js"></script>
+	<script type="text/javascript" src="/static/js/jquery.ztree.exedit-3.5.js"></script>
+  <SCRIPT type="text/javascript" >
+  <!--
+	var zTree;
+	var demoIframe;
+
+	var setting = {
+		view: {
+			dblClickExpand: false,
+			showLine: true,
+			selectedMulti: false,
+            expandSpeed: ""
+		},
+		data: {
+			simpleData: {
+				enable:true,
+				idKey: "id",
+				pIdKey: "pId",
+				rootPId: ""
+			}
+		},
+		callback: {
+			beforeClick: function(treeId, treeNode) {
+				var zTree = $.fn.zTree.getZTreeObj("tree");
+				if (treeNode.isParent) {
+					zTree.expandNode(treeNode);
+					return false;
+				} else {
+					demoIframe.attr("src", '/log/?file=' + treeNode.file);
+					return true;
+				}
+			},
+            beforeExpand: beforeExpand,
+            onAsyncSuccess: onAsyncSuccess,
+            onAsyncError: onAsyncError
+		},
+        async: {
+				enable: true,
+                type: 'get',
+				url: getUrl
+			},
+        check: {
+            enable: true
+        }
+	};
+
+	var zNodes =[
+        {% for dir in dirs %}
+            {name:"{{ dir }}", file: "{{ dir }}", isParent:true},
+        {% endfor %}
+{#        {name:"/tmp", id:"1",  times:1, file: '/tmp', isParent:true},#}
+{#        {name:"/etc", id:"2", times:1, file: '/etc', isParent:true},#}
+{#        {name:"/opt", id:"3",  times:1, file: '/opt', isParent:true}#}
+
+
+	];
+
+	$(document).ready(function(){
+		var t = $("#tree");
+		t = $.fn.zTree.init(t, setting, zNodes);
+		demoIframe = $("#testIframe");
+		demoIframe.bind("load", loadReady);
+		var zTree = $.fn.zTree.getZTreeObj("tree");
+		zTree.selectNode(zTree.getNodeByParam("id", 101));
+
+	});
+
+	function loadReady() {
+		var bodyH = demoIframe.contents().find("body").get(0).scrollHeight,
+		htmlH = demoIframe.contents().find("html").get(0).scrollHeight,
+		maxH = Math.max(bodyH, htmlH), minH = Math.min(bodyH, htmlH),
+		h = demoIframe.height() >= maxH ? minH:maxH ;
+		if (h < 530) h = 530;
+		demoIframe.height(h);
+	}
+
+    function getUrl(treeId, treeNode) {
+{#			var curCount = (treeNode.children) ? treeNode.children.length : 0;#}
+{#			var getCount = (curCount + perCount) > treeNode.count ? (treeNode.count - curCount) : perCount;#}
+{#			var param = "id="+treeNode.id+"_"+(treeNode.times++) +"&count="+getCount;#}
+			return "/get_json/?dir=" + treeNode.file;
+			// return "../asyncData/getNodesForBigData.php?" + param;
+
+		}
+
+    function beforeExpand(treeId, treeNode) {
+        if (!treeNode.isAjaxing) {
+            treeNode.times = 1;
+            ajaxGetNodes(treeNode, "refresh");
+            return true;
+        } else {
+            alert("zTree 正在下载数据中，请稍后展开节点。。。");
+            return false;
+        }
+    }
+
+    function onAsyncSuccess(event, treeId, treeNode, msg) {
+        if (!msg || msg.length == 0) {
+            return;
+        }
+        var zTree = $.fn.zTree.getZTreeObj("tree"),
+        totalCount = treeNode.count;
+        if (treeNode.children.length < totalCount) {
+            setTimeout(function() {ajaxGetNodes(treeNode);}, perTime);
+        } else {
+            treeNode.icon = "";
+            zTree.updateNode(treeNode);
+            zTree.selectNode(treeNode.children[0]);
+
+        }
+    }
+
+    function onAsyncError(event, treeId, treeNode, XMLHttpRequest, textStatus, errorThrown) {
+        var zTree = $.fn.zTree.getZTreeObj("tree");
+        alert("异步获取数据出现异常。");
+        treeNode.icon = "";
+        zTree.updateNode(treeNode);
+    }
+
+    function ajaxGetNodes(treeNode, reloadType) {
+        var zTree = $.fn.zTree.getZTreeObj("tree");
+        if (reloadType == "refresh") {
+            treeNode.icon = "../../../css/zTreeStyle/img/loading.gif";
+            zTree.updateNode(treeNode);
+        }
+        zTree.reAsyncChildNodes(treeNode, reloadType, true);
+    }
+
+  //-->
+  </SCRIPT>
+ </HEAD>
+
+<BODY>
+
+    <div class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">日志查看系统</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <form class="navbar-form navbar-right" role="form">
+            <div class="form-group">
+              <input type="text" placeholder="Email" class="form-control">
+            </div>
+            <div class="form-group">
+              <input type="password" placeholder="Password" class="form-control">
+            </div>
+            <button type="submit" class="btn btn-success">登录</button>
+          </form>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </div>
+
+    <div class="container" style="padding-top: 70px;">
+        <TABLE border=0 height=600px align=left>
+            <TR>
+                <TD width=260px align=left valign=top style="BORDER-RIGHT: #999999 1px dashed">
+                    <ul id="tree" class="ztree" style="width:260px; overflow:auto;"></ul>
+                </TD>
+                <TD width=770px align=left valign=top>
+                    <IFRAME ID="testIframe" Name="testIframe" FRAMEBORDER=0 SCROLLING=yes width=100%  height=600px src="/log/?file=/tmp/passwd">
+{#                    <IFRAME ID="testIframe" Name="testIframe" FRAMEBORDER=0 SCROLLING=yes width=100%  height=600px src="http://www.qq.com">#}
+
+                    </IFRAME>
+                </TD>
+            </TR>
+        </TABLE>
+    </div>
+
+{#    <script src="http://cdn.bootcss.com/jquery/1.11.3/jquery.min.js"></script>#}
+    <script src="http://cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+</BODY>
+</HTML>

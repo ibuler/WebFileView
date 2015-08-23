@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<HTML>
+<HEAD>
+	<TITLE> log view </TITLE>
+	<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+</HEAD>
+
+<BODY>
+<h1>查看文件内容</h1>
+<h6>[ 文件路径: {{ log_path }} ]</h6>
+<div class="content_wrap">
+	<div class="zTreeDemoBackground left">
+		<ul id="treeDemo" class="ztree"></ul>
+	</div>
+	<div class="right">
+        <pre>
+            {{ log_content }}
+        </pre>
+	</div>
+</div>
+</BODY>
+</HTML>
